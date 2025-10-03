@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApiAuthenticate;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'auth.api' => Authenticate::class,
+            'auth.api' => ApiAuthenticate::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
