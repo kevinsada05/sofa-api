@@ -13,13 +13,18 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string',
-            'password' => 'required|string',
+            'phone' => [
+                'required',
+                'regex:/^(\+3556[789]\d{7}|06[89]\d{7}|6[89]\d{7})$/'
+            ],
+            'password' => ['required', 'string'],
         ], [
             'phone.required' => 'Numri i telefonit është i detyrueshëm.',
+            'phone.regex'    => 'Ju lutem vendosni një numër telefoni shqiptar të vlefshëm (+355 67/68/69 xxxxxxx).',
             'password.required' => 'Fjalëkalimi është i detyrueshëm.',
         ]);
 
+        // Normalize phone → +3556XXXXXXXX
         $phone = preg_replace('/\D+/', '', $request->phone);
         if (str_starts_with($phone, '00355')) {
             $phone = substr($phone, 5);
