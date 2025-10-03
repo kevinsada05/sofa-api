@@ -24,7 +24,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
 
     // Protected
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth.api:sanctum')->group(function () {
         Route::get('/me', [DashboardController::class, 'me']);
         Route::post('/logout', [LoginController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
