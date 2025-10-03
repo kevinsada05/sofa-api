@@ -13,7 +13,7 @@ class RegisterController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'phone' => [
                 'required',
                 'regex:/^(\+3556[789]\d{7}|06[89]\d{7}|6[89]\d{7})$/',
@@ -22,29 +22,45 @@ class RegisterController extends Controller
             'password' => ['required', Rules\Password::defaults()],
             'user_type_id' => ['required', 'exists:user_types,id'],
             'name' => ['nullable', 'string', 'max:255'],
+        ], [
+            'phone.required' => 'Numri i telefonit është i detyrueshëm.',
+            'phone.unique' => 'Ky numër telefoni është i regjistruar tashmë.',
+            'phone.regex' => 'Ju lutem vendosni një numër telefoni shqiptar të vlefshëm (+355 67/68/69 xxxxxxx).',
+            'password.required' => 'Fjalëkalimi është i detyrueshëm.',
+            'password.min' => 'Fusha e fjalëkalimit duhet të ketë të paktën 8 karaktere.',
+            'user_type_id.required' => 'Ju lutem zgjidhni llojin e përdoruesit.',
+            'user_type_id.exists' => 'Lloji i përdoruesit i zgjedhur nuk është i vlefshëm.',
         ]);
 
         // Normalize phone → +3556XXXXXXXX
-        $phone = preg_replace('/\D+/', '', $request->phone);
-        if (str_starts_with($phone, '355')) $phone = substr($phone, 3);
-        if (str_starts_with($phone, '0')) $phone = substr($phone, 1);
-        $phone = '+355' . $phone;
+        $phone = preg_replace('/\D+/', '', $validated['phone']);
+        if (str_starts_with($phone, '355')) {
+            $phone = substr($phone, 3);
+        }
+        if (str_starts_with($phone, '0')) {
+            $phone = substr($phone, 1);
+        }
+        $validated['phone'] = '+355' . $phone;
 
+        // Create user
         $user = User::create([
-            'name' => $request->name,
-            'phone' => $phone,
-            'password' => Hash::make($request->password),
-            'user_type_id' => $request->user_type_id,
+            'name' => $validated['name'] ?? null,
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'user_type_id' => $validated['user_type_id'],
         ]);
 
-        // one token per user
-        $user->tokens()->where('name', 'api')->delete();
-        $token = $user->createToken('api')->plainTextToken;
+        // One token per user (for mobile API)
+        $user->tokens()->where('name', 'mobile')->delete();
+        $token = $user->createToken('mobile')->plainTextToken;
 
         return response()->json([
-            'message' => 'Registration successful',
-            'user' => $user,
-            'token' => $token,
+            'success' => true,
+            'message' => 'Regjistrimi u krye me sukses.',
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+            ]
         ], 201);
     }
 }
