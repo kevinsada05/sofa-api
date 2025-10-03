@@ -37,6 +37,11 @@ Route::prefix('auth')->group(function () {
         Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+        // Listings: creation meta (for Native flow)
+        Route::get('/listings/create', [AuthListingController::class, 'createMeta']);
+        Route::post('/listings/choose-category', [AuthListingController::class, 'chooseCategory']);
+        Route::get('/listings/create/{category}', [AuthListingController::class, 'createMetaByCategory']);
+
         // Listings
         Route::get('/listings', [AuthListingController::class, 'index']);
         Route::post('/listings/{category}', [AuthListingController::class, 'store']);
@@ -44,11 +49,6 @@ Route::prefix('auth')->group(function () {
         Route::put('/listings/{id}', [AuthListingController::class, 'update']);
         Route::delete('/listings/{id}', [AuthListingController::class, 'destroy']);
         Route::post('/listings/{id}/republish', [AuthListingController::class, 'republish']);
-
-        // Listings: creation meta (for Native flow)
-        Route::get('/listings/create', [AuthListingController::class, 'createMeta']);
-        Route::post('/listings/choose-category', [AuthListingController::class, 'chooseCategory']);
-        Route::get('/listings/create/{category}', [AuthListingController::class, 'createMetaByCategory']);
 
         // Uploads
         Route::post('/listings/upload', [UploadController::class, 'store']);
