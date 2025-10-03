@@ -40,7 +40,7 @@ class LoginController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'phone' => ['Të dhënat e futura janë të pasakta.'],
+                'phone' => ['Kombinimi nuk është i saktë'],
             ]);
         }
 
