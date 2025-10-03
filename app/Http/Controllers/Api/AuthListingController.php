@@ -16,9 +16,23 @@ use App\Http\Requests\Listings\SharedRentRequest;
 use App\Http\Requests\Listings\ShopRequest;
 use App\Http\Requests\Listings\VillaRequest;
 use App\Http\Requests\Listings\WarehouseRequest;
+use App\Models\ApartmentType;
+use App\Models\BusinessType;
 use App\Models\Category;
+use App\Models\City;
+use App\Models\Condition;
+use App\Models\Furnishing;
+use App\Models\Heating;
+use App\Models\LandType;
 use App\Models\Listing;
+use App\Models\Orientation;
+use App\Models\Ownership;
+use App\Models\RentPeriod;
+use App\Models\SoilQuality;
 use App\Models\TemporaryImage;
+use App\Models\TerrainType;
+use App\Models\TransactionType;
+use App\Models\YearBuild;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -186,4 +200,96 @@ class AuthListingController extends Controller
             default => throw new \InvalidArgumentException("Unknown category code: {$code}"),
         };
     }
+
+    public function createMeta()
+    {
+        $categories = Category::select('id', 'name', 'code')->get();
+
+        return response()->json([
+            'categories' => $categories,
+        ]);
+    }
+
+    public function chooseCategory(Request $request)
+    {
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $category = Category::findOrFail($request->category_id);
+
+        return response()->json([
+            'message' => 'Category selected successfully.',
+            'category' => $category,
+            'next_url' => route('api.auth.listings.create.byCategory', ['category' => $category->code]),
+        ]);
+    }
+
+    public function createMetaByCategory(Request $request, $categoryCode)
+    {
+        $userId = $request->user()->id;
+
+        // clean temp images if fresh GET
+        if ($request->isMethod('GET')) {
+            TemporaryImage::where('user_id', $userId)->delete();
+        }
+
+        $category = Category::where('code', $categoryCode)->firstOrFail();
+
+        $data = [
+            'category' => $category,
+            'cities' => City::all(['id', 'name']),
+            'transactionTypes' => TransactionType::all(['id', 'name']),
+            'ownerships' => Ownership::all(['id', 'name']),
+            'rentPeriods' => RentPeriod::all(['id', 'name']),
+            'businessTypes' => BusinessType::all(['id', 'name']),
+        ];
+
+        $withYearCondition = [
+            'yearBuilds' => YearBuild::all(['id', 'name']),
+            'conditions' => Condition::all(['id', 'name']),
+        ];
+
+        $withFullSet = array_merge($withYearCondition, [
+            'furnishings' => Furnishing::all(['id', 'name']),
+            'orientations' => Orientation::all(['id', 'name']),
+            'heatings' => Heating::all(['id', 'name']),
+        ]);
+
+        switch ($category->code) {
+            case 'apartment':
+            case 'shared_rent':
+                $data = array_merge($data, $withFullSet, [
+                    'apartmentTypes' => ApartmentType::all(['id', 'name']),
+                ]);
+                break;
+
+            case 'villa':
+            case 'penthouse':
+            case 'garsoniere':
+            case 'shop':
+            case 'office':
+                $data = array_merge($data, $withFullSet);
+                break;
+
+            case 'warehouse':
+                $data = array_merge($data, $withYearCondition);
+                break;
+
+            case 'agricultural_land':
+                $data = array_merge($data, [
+                    'landTypes' => LandType::all(['id', 'name']),
+                    'soilQualities' => SoilQuality::all(['id', 'name']),
+                    'terrainTypes' => TerrainType::all(['id', 'name']),
+                ]);
+                break;
+
+            case 'plot':
+                $data['terrainTypes'] = TerrainType::all(['id', 'name']);
+                break;
+        }
+
+        return response()->json($data);
+    }
+
 }
