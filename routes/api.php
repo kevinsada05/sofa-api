@@ -20,12 +20,12 @@ use Illuminate\Support\Facades\Route;
 // ========== AUTH USER ROUTES ==========
 Route::prefix('auth')->group(function () {
     // Public
-    Route::get('/me', [DashboardController::class, 'me']);
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
 
     // Protected
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [DashboardController::class, 'me']);
         Route::post('/logout', [LoginController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
