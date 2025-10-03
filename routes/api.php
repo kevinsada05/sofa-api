@@ -30,12 +30,10 @@ Route::prefix('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Profile
-        Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-        Route::get('/profile/details', [ProfileController::class, 'editDetails'])->name('profile.details');
-        Route::patch('/profile/details', [ProfileController::class, 'updateDetails'])->name('profile.details.update');
-        Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.password');
-        Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::get('/profile', [ProfileController::class, 'index']);
+        Route::patch('/profile/details', [ProfileController::class, 'updateDetails']);
+        Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
+        Route::delete('/profile', [ProfileController::class, 'destroy']);
 
         // Listings: creation meta (for Native flow)
         Route::get('/listings/create', [AuthListingController::class, 'createMeta']);
