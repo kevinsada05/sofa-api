@@ -87,8 +87,9 @@ class User extends Authenticatable
 
     public function getIsAdminAttribute(): bool
     {
-        return $this->is_admin == 1;
+        return (bool) ($this->attributes['is_admin'] ?? false);
     }
+
 
     public function deviceTokens()
     {
