@@ -26,6 +26,12 @@ class User extends Authenticatable
         'fcm_token'
     ];
 
+    protected $appends = [
+        'is_individual',
+        'is_business',
+        'is_agency',
+        'is_admin',
+    ];
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -64,28 +70,26 @@ class User extends Authenticatable
         return $this->belongsTo(UserType::class, 'user_type_id');
     }
 
-    // app/Models/User.php
-    public function isIndividual()
+    public function getIsIndividualAttribute(): bool
     {
         return $this->user_type_id == 1;
     }
 
-    public function isBusiness()
+    public function getIsBusinessAttribute(): bool
     {
         return $this->user_type_id == 2;
     }
 
-    public function isAgency()
+    public function getIsAgencyAttribute(): bool
     {
         return $this->user_type_id == 3;
     }
 
-    public function isAdmin(): bool
+    public function getIsAdminAttribute(): bool
     {
         return $this->is_admin == 1;
     }
 
-// App\Models\User.php
     public function deviceTokens()
     {
         return $this->hasMany(DeviceToken::class);
