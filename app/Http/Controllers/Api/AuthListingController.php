@@ -240,29 +240,29 @@ class AuthListingController extends Controller
 
         $data = [
             'category' => $category,
-            'cities' => City::all(['id', 'name']),
-            'transactionTypes' => TransactionType::all(['id', 'name']),
-            'ownerships' => Ownership::all(['id', 'name']),
-            'rentPeriods' => RentPeriod::all(['id', 'name']),
-            'businessTypes' => BusinessType::all(['id', 'name']),
+            'cities' => City::all(),
+            'transactionTypes' => TransactionType::all(),
+            'ownerships' => Ownership::all(),
+            'rentPeriods' => RentPeriod::all(),
+            'businessTypes' => BusinessType::all(),
         ];
 
         $withYearCondition = [
-            'yearBuilds' => YearBuild::all(['id', 'name']),
-            'conditions' => Condition::all(['id', 'name']),
+            'yearBuilds' => YearBuild::all(),
+            'conditions' => Condition::all(),
         ];
 
         $withFullSet = array_merge($withYearCondition, [
-            'furnishings' => Furnishing::all(['id', 'name']),
-            'orientations' => Orientation::all(['id', 'name']),
-            'heatings' => Heating::all(['id', 'name']),
+            'furnishings' => Furnishing::all(),
+            'orientations' => Orientation::all(),
+            'heatings' => Heating::all(),
         ]);
 
         switch ($category->code) {
             case 'apartment':
             case 'shared_rent':
                 $data = array_merge($data, $withFullSet, [
-                    'apartmentTypes' => ApartmentType::all(['id', 'name']),
+                    'apartmentTypes' => ApartmentType::all(),
                 ]);
                 break;
 
@@ -280,14 +280,14 @@ class AuthListingController extends Controller
 
             case 'agricultural_land':
                 $data = array_merge($data, [
-                    'landTypes' => LandType::all(['id', 'name']),
-                    'soilQualities' => SoilQuality::all(['id', 'name']),
-                    'terrainTypes' => TerrainType::all(['id', 'name']),
+                    'landTypes' => LandType::all(),
+                    'soilQualities' => SoilQuality::all(),
+                    'terrainTypes' => TerrainType::all(),
                 ]);
                 break;
 
             case 'plot':
-                $data['terrainTypes'] = TerrainType::all(['id', 'name']);
+                $data['terrainTypes'] = TerrainType::all();
                 break;
         }
 
