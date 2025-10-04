@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\AuthListingController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ListingController;
@@ -93,3 +94,5 @@ Route::get('/listings/{id}', [ListingController::class, 'show']);
 Route::get('/favorites', [FavoriteController::class, 'guestIndex']);
 Route::post('/favorites/{listing}', [FavoriteController::class, 'guestStore']);
 Route::delete('/favorites/{listing}', [FavoriteController::class, 'guestDestroy']);
+
+Route::post('/contacts', [ContactController::class, 'store']);
