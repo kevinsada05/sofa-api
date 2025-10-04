@@ -38,7 +38,12 @@ class Listing extends Model
 
     protected $dates = ['deleted_at'];
 
-    protected $appends = ['primary_image_url'];
+    protected $appends = [
+        'primary_image_url',
+        'title',
+        'formatted_date',
+        'formatted_expiry_date',
+    ];
 
     public function user()
     {

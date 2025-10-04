@@ -51,7 +51,9 @@ class AuthListingController extends Controller
             ->latest()
             ->get();
 
-        return response()->json(['listings' => $listings]);
+        return response()->json([
+            'listings' => $listings,
+        ]);
     }
 
     public function show(Request $request, $id)
