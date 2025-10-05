@@ -52,6 +52,7 @@ class AdminListingController extends Controller
             'rentPeriod',
             'ownership',
             'status',
+            'user'
         ])->findOrFail($id);
 
         $relations = [
