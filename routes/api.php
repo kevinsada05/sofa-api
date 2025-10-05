@@ -36,22 +36,20 @@ Route::prefix('auth')->group(function () {
         Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
         Route::delete('/profile', [ProfileController::class, 'destroy']);
 
-        // Listings: creation meta (for Native flow)
-        Route::get('/listings/create', [AuthListingController::class, 'createMeta']);
-        Route::post('/listings/choose-category', [AuthListingController::class, 'chooseCategory']);
-        Route::get('/listings/create/{category}', [AuthListingController::class, 'createMetaByCategory']);
+        Route::get('/create', [AuthListingController::class, 'createMeta']);
+        Route::post('/choose-category', [AuthListingController::class, 'chooseCategory']);
+        Route::get('/create/{category}', [AuthListingController::class, 'createMetaByCategory'])->name('api.auth.listings.create.byCategory');
 
-        // Listings
-        Route::get('/listings', [AuthListingController::class, 'index']);
-        Route::post('/listings/{category}', [AuthListingController::class, 'store']);
-        Route::get('/listings/{id}', [AuthListingController::class, 'show']);
-        Route::put('/listings/{id}', [AuthListingController::class, 'update']);
-        Route::delete('/listings/{id}', [AuthListingController::class, 'destroy']);
-        Route::post('/listings/{id}/republish', [AuthListingController::class, 'republish']);
+        Route::get('/', [AuthListingController::class, 'index']);
+        Route::post('/{category}', [AuthListingController::class, 'store']);
+        Route::get('/{id}', [AuthListingController::class, 'show']);
+        Route::put('/{id}', [AuthListingController::class, 'update']);
+        Route::delete('/{id}', [AuthListingController::class, 'destroy']);
+        Route::post('/{id}/republish', [AuthListingController::class, 'republish']);
 
         // Uploads
-        Route::post('/listings/upload', [UploadController::class, 'store']);
-        Route::get('/listings/upload-status', [UploadController::class, 'status']);
+        Route::post('/upload', [AuthListingController::class, 'upload']);
+        Route::get('/upload-status', [AuthListingController::class, 'uploadStatus']);
     });
 });
 
