@@ -42,7 +42,7 @@ class AdminListingController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $listing = Listing::with([
             'images',
@@ -56,53 +56,97 @@ class AdminListingController extends Controller
 
         $relations = [
             'apartment' => [
-                'apartmentDetail', 'apartmentDetail.yearBuild', 'apartmentDetail.condition',
-                'apartmentDetail.furnishing', 'apartmentDetail.orientation', 'apartmentDetail.heating',
+                'apartmentDetail',
+                'apartmentDetail.yearBuild',
+                'apartmentDetail.condition',
+                'apartmentDetail.furnishing',
+                'apartmentDetail.orientation',
+                'apartmentDetail.heating',
                 'apartmentDetail.apartmentType',
             ],
             'villa' => [
-                'villaDetail', 'villaDetail.yearBuild', 'villaDetail.condition',
-                'villaDetail.furnishing', 'villaDetail.orientation', 'villaDetail.heating',
+                'villaDetail',
+                'villaDetail.yearBuild',
+                'villaDetail.condition',
+                'villaDetail.furnishing',
+                'villaDetail.orientation',
+                'villaDetail.heating',
             ],
             'shared_rent' => [
-                'sharedRentDetail', 'sharedRentDetail.yearBuild', 'sharedRentDetail.condition',
-                'sharedRentDetail.furnishing', 'sharedRentDetail.orientation',
-                'sharedRentDetail.heating', 'sharedRentDetail.apartmentType',
+                'sharedRentDetail',
+                'sharedRentDetail.yearBuild',
+                'sharedRentDetail.condition',
+                'sharedRentDetail.furnishing',
+                'sharedRentDetail.orientation',
+                'sharedRentDetail.heating',
+                'sharedRentDetail.apartmentType',
             ],
             'penthouse' => [
-                'penthouseDetail', 'penthouseDetail.yearBuild', 'penthouseDetail.condition',
-                'penthouseDetail.furnishing', 'penthouseDetail.orientation', 'penthouseDetail.heating',
+                'penthouseDetail',
+                'penthouseDetail.yearBuild',
+                'penthouseDetail.condition',
+                'penthouseDetail.furnishing',
+                'penthouseDetail.orientation',
+                'penthouseDetail.heating',
             ],
             'garsoniere' => [
-                'garsoniereDetail', 'garsoniereDetail.yearBuild', 'garsoniereDetail.condition',
-                'garsoniereDetail.furnishing', 'garsoniereDetail.orientation', 'garsoniereDetail.heating',
+                'garsoniereDetail',
+                'garsoniereDetail.yearBuild',
+                'garsoniereDetail.condition',
+                'garsoniereDetail.furnishing',
+                'garsoniereDetail.orientation',
+                'garsoniereDetail.heating',
             ],
             'garage' => ['garageDetail'],
             'shop' => [
-                'shopDetail', 'shopDetail.yearBuild', 'shopDetail.condition',
-                'shopDetail.furnishing', 'shopDetail.orientation', 'shopDetail.heating',
+                'shopDetail',
+                'shopDetail.yearBuild',
+                'shopDetail.condition',
+                'shopDetail.furnishing',
+                'shopDetail.orientation',
+                'shopDetail.heating',
             ],
             'office' => [
-                'officeDetail', 'officeDetail.yearBuild', 'officeDetail.condition',
-                'officeDetail.furnishing', 'officeDetail.orientation', 'officeDetail.heating',
+                'officeDetail',
+                'officeDetail.yearBuild',
+                'officeDetail.condition',
+                'officeDetail.furnishing',
+                'officeDetail.orientation',
+                'officeDetail.heating',
             ],
             'warehouse' => [
-                'warehouseDetail', 'warehouseDetail.yearBuild', 'warehouseDetail.condition',
+                'warehouseDetail',
+                'warehouseDetail.yearBuild',
+                'warehouseDetail.condition',
             ],
             'agricultural_land' => [
-                'agriculturalLandDetail', 'agriculturalLandDetail.landType',
-                'agriculturalLandDetail.soilQuality', 'agriculturalLandDetail.terrainType',
+                'agriculturalLandDetail',
+                'agriculturalLandDetail.landType',
+                'agriculturalLandDetail.soilQuality',
+                'agriculturalLandDetail.terrainType',
             ],
-            'plot' => ['plotDetail', 'plotDetail.terrainType'],
+            'plot' => [
+                'plotDetail',
+                'plotDetail.terrainType',
+            ],
             'business' => ['businessDetail'],
         ];
 
         $categoryCode = $listing->category->code;
+
         if (isset($relations[$categoryCode])) {
             $listing->load($relations[$categoryCode]);
         }
 
-        return response()->json(['listing' => $listing]);
+        $detailRelation = $categoryCode . 'Detail';
+        $detailId = $listing->$detailRelation?->id;
+
+        return response()->json([
+            'listing'        => $listing,
+            'categoryCode'   => $categoryCode,
+            'detailRelation' => $detailRelation,
+            'detailId'       => $detailId,
+        ]);
     }
 
     public function accept(Listing $listing)

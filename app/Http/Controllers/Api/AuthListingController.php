@@ -53,7 +53,6 @@ class AuthListingController extends Controller
     {
         $userId = $request->user()->id;
 
-        // fresh GET -> clear temp images
         if ($request->isMethod('GET')) {
             TemporaryImage::where('user_id', $userId)->delete();
         }
@@ -235,13 +234,6 @@ class AuthListingController extends Controller
     /** Upload temp image */
     public function upload(Request $request)
     {
-        \Log::info('Upload called', [
-            'user' => $request->user()?->id,
-            'has_file' => $request->hasFile('image'),
-            'file_info' => $request->file('image')?->getClientOriginalName(),
-            'is_primary' => $request->input('is_primary')
-        ]);
-
         $request->validate([
             'image'=>'required|file|max:10240',
             'is_primary'=>'nullable|boolean'
@@ -253,11 +245,6 @@ class AuthListingController extends Controller
             'user_id'=>$request->user()->id,
             'b2_key'=>$path,
             'is_primary'=>$request->boolean('is_primary',false),
-        ]);
-
-        \Log::info('Upload success', [
-            'tmp_id' => $tmp->id,
-            'path' => $path,
         ]);
 
         return response()->json($tmp,201);
