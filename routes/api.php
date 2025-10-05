@@ -40,16 +40,15 @@ Route::prefix('auth')->group(function () {
         Route::post('/choose-category', [AuthListingController::class, 'chooseCategory']);
         Route::get('/create/{category}', [AuthListingController::class, 'createMetaByCategory'])->name('api.auth.listings.create.byCategory');
 
+        Route::post('/upload', [AuthListingController::class, 'upload']);
+        Route::get('/upload-status', [AuthListingController::class, 'uploadStatus']);
+
         Route::get('/', [AuthListingController::class, 'index']);
         Route::post('/{category}', [AuthListingController::class, 'store']);
         Route::get('/{id}', [AuthListingController::class, 'show']);
         Route::put('/{id}', [AuthListingController::class, 'update']);
         Route::delete('/{id}', [AuthListingController::class, 'destroy']);
         Route::post('/{id}/republish', [AuthListingController::class, 'republish']);
-
-        // Uploads
-        Route::post('/upload', [AuthListingController::class, 'upload']);
-        Route::get('/upload-status', [AuthListingController::class, 'uploadStatus']);
     });
 });
 
