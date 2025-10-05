@@ -142,6 +142,7 @@ class AdminListingController extends Controller
 
         $detailRelation = $categoryCode . 'Detail';
         $detailId = $listing->$detailRelation?->id;
+        $listing->details = $listing->$detailRelation ?? null;
 
         return response()->json([
             'listing'        => $listing,
