@@ -152,8 +152,9 @@ class AdminListingController extends Controller
         ]);
     }
 
-    public function accept(Listing $listing)
+    public function accept($id)
     {
+        $listing = Listing::findOrFail($id);
         $listing->update([
             'status_id' => 1, // Active
             'date_published' => Carbon::now(),
@@ -165,8 +166,9 @@ class AdminListingController extends Controller
         return response()->json(['message' => 'Listing accepted.', 'listing' => $listing]);
     }
 
-    public function decline(Listing $listing)
+    public function decline($id)
     {
+        $listing = Listing::findOrFail($id);
         $listing->update(['status_id' => 5]); // Canceled
         return response()->json(['message' => 'Listing declined.', 'listing' => $listing]);
     }
