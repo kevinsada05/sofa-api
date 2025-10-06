@@ -46,9 +46,16 @@ class ListingController extends Controller
             ->orderByDesc('date_published')
             ->simplePaginate(20);
 
+        $cities = City::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+        $transactionTypes = TransactionType::orderBy('name')->get();
+
         return response()->json([
             'data' => $listings->items(),
             'next_page' => $listings->nextPageUrl(),
+            'cities' => $cities,
+            'categories' => $categories,
+            'transactionTypes' => $transactionTypes,
             'filters' => [
                 'cities' => City::orderBy('name')->get(),
                 'categories' => Category::orderBy('name')->get(),
