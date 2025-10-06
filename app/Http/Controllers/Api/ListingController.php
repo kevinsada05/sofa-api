@@ -79,9 +79,7 @@ class ListingController extends Controller
 
         // favorites check
         $visitorKey = request()->header('X-Sofa-UUID', request()->cookie('sofa_uuid'));
-
         $isFavorited = false;
-
         if ($visitorKey) {
             $isFavorited = $listing->favorites()
                 ->where('session_key', $visitorKey)
@@ -97,19 +95,83 @@ class ListingController extends Controller
             ->take(5)
             ->get();
 
+        // details map (with lookup relations)
         $map = [
-            'apartment' => 'apartmentDetail',
-            'villa' => 'villaDetail',
-            'shared_rent' => 'sharedRentDetail',
-            'penthouse' => 'penthouseDetail',
-            'garsoniere' => 'garsoniereDetail',
-            'garage' => 'garageDetail',
-            'shop' => 'shopDetail',
-            'office' => 'officeDetail',
-            'warehouse' => 'warehouseDetail',
-            'agricultural_land' => 'agriculturalLandDetail',
-            'plot' => 'plotDetail',
-            'business' => 'businessDetail',
+            'apartment' => [
+                'apartmentDetail',
+                'apartmentDetail.yearBuild',
+                'apartmentDetail.condition',
+                'apartmentDetail.furnishing',
+                'apartmentDetail.orientation',
+                'apartmentDetail.heating',
+                'apartmentDetail.apartmentType',
+            ],
+            'villa' => [
+                'villaDetail',
+                'villaDetail.yearBuild',
+                'villaDetail.condition',
+                'villaDetail.furnishing',
+                'villaDetail.orientation',
+                'villaDetail.heating',
+            ],
+            'shared_rent' => [
+                'sharedRentDetail',
+                'sharedRentDetail.yearBuild',
+                'sharedRentDetail.condition',
+                'sharedRentDetail.furnishing',
+                'sharedRentDetail.orientation',
+                'sharedRentDetail.heating',
+                'sharedRentDetail.apartmentType',
+            ],
+            'penthouse' => [
+                'penthouseDetail',
+                'penthouseDetail.yearBuild',
+                'penthouseDetail.condition',
+                'penthouseDetail.furnishing',
+                'penthouseDetail.orientation',
+                'penthouseDetail.heating',
+            ],
+            'garsoniere' => [
+                'garsoniereDetail',
+                'garsoniereDetail.yearBuild',
+                'garsoniereDetail.condition',
+                'garsoniereDetail.furnishing',
+                'garsoniereDetail.orientation',
+                'garsoniereDetail.heating',
+            ],
+            'garage' => ['garageDetail'],
+            'shop' => [
+                'shopDetail',
+                'shopDetail.yearBuild',
+                'shopDetail.condition',
+                'shopDetail.furnishing',
+                'shopDetail.orientation',
+                'shopDetail.heating',
+            ],
+            'office' => [
+                'officeDetail',
+                'officeDetail.yearBuild',
+                'officeDetail.condition',
+                'officeDetail.furnishing',
+                'officeDetail.orientation',
+                'officeDetail.heating',
+            ],
+            'warehouse' => [
+                'warehouseDetail',
+                'warehouseDetail.yearBuild',
+                'warehouseDetail.condition',
+            ],
+            'agricultural_land' => [
+                'agriculturalLandDetail',
+                'agriculturalLandDetail.landType',
+                'agriculturalLandDetail.soilQuality',
+                'agriculturalLandDetail.terrainType',
+            ],
+            'plot' => [
+                'plotDetail',
+                'plotDetail.terrainType',
+            ],
+            'business' => ['businessDetail'],
         ];
 
         $categoryCode = $listing->category->code ?? null;
