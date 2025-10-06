@@ -21,26 +21,19 @@ class ListingController extends Controller
                 'category',
                 'transactionType'
             ])
-            ->when($request->transaction_type_id, fn($q) =>
-            $q->whereIn('transaction_type_id', explode(',', $request->transaction_type_id))
+            ->when($request->transaction_type_id, fn($q) => $q->whereIn('transaction_type_id', explode(',', $request->transaction_type_id))
             )
-            ->when($request->category_id, fn($q) =>
-            $q->whereIn('category_id', explode(',', $request->category_id))
+            ->when($request->category_id, fn($q) => $q->whereIn('category_id', explode(',', $request->category_id))
             )
-            ->when($request->city_id, fn($q) =>
-            $q->whereIn('city_id', explode(',', $request->city_id))
+            ->when($request->city_id, fn($q) => $q->whereIn('city_id', explode(',', $request->city_id))
             )
-            ->when($request->price_min, fn($q) =>
-            $q->where('price', '>=', $request->price_min)
+            ->when($request->price_min, fn($q) => $q->where('price', '>=', $request->price_min)
             )
-            ->when($request->price_max, fn($q) =>
-            $q->where('price', '<=', $request->price_max)
+            ->when($request->price_max, fn($q) => $q->where('price', '<=', $request->price_max)
             )
-            ->when($request->size_min, fn($q) =>
-            $q->where('size_m2', '>=', $request->size_min)
+            ->when($request->size_min, fn($q) => $q->where('size_m2', '>=', $request->size_min)
             )
-            ->when($request->size_max, fn($q) =>
-            $q->where('size_m2', '<=', $request->size_max)
+            ->when($request->size_max, fn($q) => $q->where('size_m2', '<=', $request->size_max)
             )
             ->where('status_id', 1)
             ->orderByDesc('date_published')
@@ -100,18 +93,18 @@ class ListingController extends Controller
             ->get();
 
         $map = [
-            'apartment'        => 'apartmentDetail',
-            'villa'            => 'villaDetail',
-            'shared_rent'      => 'sharedRentDetail',
-            'penthouse'        => 'penthouseDetail',
-            'garsoniere'       => 'garsoniereDetail',
-            'garage'           => 'garageDetail',
-            'shop'             => 'shopDetail',
-            'office'           => 'officeDetail',
-            'warehouse'        => 'warehouseDetail',
-            'agricultural_land'=> 'agriculturalLandDetail',
-            'plot'             => 'plotDetail',
-            'business'         => 'businessDetail',
+            'apartment' => 'apartmentDetail',
+            'villa' => 'villaDetail',
+            'shared_rent' => 'sharedRentDetail',
+            'penthouse' => 'penthouseDetail',
+            'garsoniere' => 'garsoniereDetail',
+            'garage' => 'garageDetail',
+            'shop' => 'shopDetail',
+            'office' => 'officeDetail',
+            'warehouse' => 'warehouseDetail',
+            'agricultural_land' => 'agriculturalLandDetail',
+            'plot' => 'plotDetail',
+            'business' => 'businessDetail',
         ];
 
         $categoryCode = $listing->category->code ?? null;
@@ -119,8 +112,12 @@ class ListingController extends Controller
             $listing->load($map[$categoryCode]);
         }
 
+        $listing->loadCount('favorites');
+
         return response()->json([
-            'listing' => $listing,
+            'listing' => $listing->toArray() + [
+                    'favorites_count' => $listing->favorites_count,
+                ],
             'isFavorited' => $isFavorited,
             'similar' => $similar,
         ]);
