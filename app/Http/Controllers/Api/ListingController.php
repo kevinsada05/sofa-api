@@ -53,9 +53,6 @@ class ListingController extends Controller
         return response()->json([
             'data' => $listings->items(),
             'next_page' => $listings->nextPageUrl(),
-            'cities' => $cities,
-            'categories' => $categories,
-            'transactionTypes' => $transactionTypes,
             'filters' => [
                 'cities' => City::orderBy('name')->get(),
                 'categories' => Category::orderBy('name')->get(),
@@ -74,29 +71,26 @@ class ListingController extends Controller
             'transactionType',
             'rentPeriod',
             'ownership',
+            'views',
         ])->findOrFail($id);
 
         if ($listing->status_id != 1) {
             return response()->json(['message' => 'Listing not found'], 404);
         }
 
-        // add views
-        $listing->loadCount('favorites');
-        $listing->load('views');
+        // increment views
         $view = $listing->views()->firstOrNew(['listing_id' => $id]);
         $view->view_count = ($view->view_count ?? 0) + 1;
         $view->real_view_count = ($view->real_view_count ?? 0) + 1;
         $view->save();
 
-        // favorites check (optional: session cookie)
+        // favorites check
         $visitorKey = request()->cookie('sofa_uuid');
-        $isFavorited = false;
-        if ($visitorKey) {
-            $isFavorited = $listing->favorites()
-                ->where('session_key', $visitorKey)
-                ->exists();
-        }
+        $isFavorited = $visitorKey
+            ? $listing->favorites()->where('session_key', $visitorKey)->exists()
+            : false;
 
+        // similar listings
         $similar = Listing::where('id', '!=', $listing->id)
             ->where('status_id', 1)
             ->where('category_id', $listing->category_id)
@@ -104,6 +98,26 @@ class ListingController extends Controller
             ->latest()
             ->take(5)
             ->get();
+
+        $map = [
+            'apartment'        => 'apartmentDetail',
+            'villa'            => 'villaDetail',
+            'shared_rent'      => 'sharedRentDetail',
+            'penthouse'        => 'penthouseDetail',
+            'garsoniere'       => 'garsoniereDetail',
+            'garage'           => 'garageDetail',
+            'shop'             => 'shopDetail',
+            'office'           => 'officeDetail',
+            'warehouse'        => 'warehouseDetail',
+            'agricultural_land'=> 'agriculturalLandDetail',
+            'plot'             => 'plotDetail',
+            'business'         => 'businessDetail',
+        ];
+
+        $categoryCode = $listing->category->code ?? null;
+        if ($categoryCode && isset($map[$categoryCode])) {
+            $listing->load($map[$categoryCode]);
+        }
 
         return response()->json([
             'listing' => $listing,
