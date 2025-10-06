@@ -78,10 +78,15 @@ class ListingController extends Controller
         $view->save();
 
         // favorites check
-        $visitorKey = request()->cookie('sofa_uuid');
-        $isFavorited = $visitorKey
-            ? $listing->favorites()->where('session_key', $visitorKey)->exists()
-            : false;
+        $visitorKey = request()->header('X-Sofa-UUID', request()->cookie('sofa_uuid'));
+
+        $isFavorited = false;
+
+        if ($visitorKey) {
+            $isFavorited = $listing->favorites()
+                ->where('session_key', $visitorKey)
+                ->exists();
+        }
 
         // similar listings
         $similar = Listing::where('id', '!=', $listing->id)
