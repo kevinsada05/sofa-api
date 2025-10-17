@@ -8,7 +8,10 @@ use App\Models\Category;
 use App\Models\City;
 use App\Models\DeviceToken;
 use App\Models\Listing;
+use App\Models\Ownership;
+use App\Models\RentPeriod;
 use App\Models\Status;
+use App\Models\TransactionType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -38,6 +41,9 @@ class AdminListingController extends Controller
             'listings' => $query->paginate(20),
             'statuses' => Status::select('id', 'name')->get(),
             'cities' => City::select('id', 'name')->get(),
+            'ownerships' => Ownership::select('id', 'name')->get(),
+            'transactionTypes' => TransactionType::select('id', 'name')->get(),
+            'rentPeriods' => RentPeriod::select('id', 'name')->get(),
             'categories' => Category::select('id', 'name')->get(),
         ]);
     }
