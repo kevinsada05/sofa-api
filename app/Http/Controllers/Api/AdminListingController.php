@@ -203,9 +203,10 @@ class AdminListingController extends Controller
         $messaging->send($message);
     }
 
-    public function update(Request $request, Listing $listing)
+    public function update(Request $request, $id)
     {
-        \Log::info('REQUEST', $request->all());
+        $listing = Listing::findOrFail($id);
+
         $baseRequest = new BaseListingRequest();
 
         $validator = Validator::make(
@@ -215,9 +216,7 @@ class AdminListingController extends Controller
             $baseRequest->attributes()
         );
 
-        \Log::info('VALIDATED DATA:', $validator->validated());
         if ($validator->fails()) {
-            \Log::info($validator->errors());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
@@ -226,8 +225,10 @@ class AdminListingController extends Controller
         return response()->json(['message' => 'Listing updated.', 'listing' => $listing]);
     }
 
-    public function destroy(Listing $listing)
+    public function destroy($id)
     {
+        $listing = Listing::findOrFail($id);
+
         Storage::disk('b2')->deleteDirectory("listings/{$listing->id}");
         $listing->delete();
 
