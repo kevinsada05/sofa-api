@@ -217,6 +217,7 @@ class AdminListingController extends Controller
 
         \Log::info('VALIDATED DATA:', $validator->validated());
         if ($validator->fails()) {
+            \Log::info($validator->errors());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
