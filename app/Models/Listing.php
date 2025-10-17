@@ -207,9 +207,10 @@ class Listing extends Model
     public function getFormattedDateAttribute()
     {
         return $this->date_published
-            ->locale('sq')
-            ->translatedFormat('d F Y');
+            ? $this->date_published->locale('sq')->translatedFormat('d F Y')
+            : '-';
     }
+
 
     public function getDetailsAttribute()
     {
