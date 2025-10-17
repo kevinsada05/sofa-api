@@ -205,6 +205,7 @@ class AdminListingController extends Controller
 
     public function update(Request $request, Listing $listing)
     {
+        \Log::info('REQUEST', $request->all());
         $baseRequest = new BaseListingRequest();
 
         $validator = Validator::make(
@@ -214,6 +215,7 @@ class AdminListingController extends Controller
             $baseRequest->attributes()
         );
 
+        \Log::info('VALIDATED DATA:', $validator->validated());
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
