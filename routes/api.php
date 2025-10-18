@@ -79,7 +79,6 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(callback: function () 
 
     Route::get('/errors', [SystemErrorController::class, 'index']);
     Route::get('/errors/{systemError}', [SystemErrorController::class, 'show']);
-    Route::post('/errors', [SystemErrorController::class, 'store']);
 });
 
 // ========== PUBLIC ROUTES ==========
@@ -93,3 +92,4 @@ Route::post('/favorites/{listing}', [FavoriteController::class, 'guestStore']);
 Route::delete('/favorites/{listing}', [FavoriteController::class, 'guestDestroy']);
 
 Route::post('/contacts', [ContactController::class, 'store']);
+Route::post('/errors', [SystemErrorController::class, 'store']);
