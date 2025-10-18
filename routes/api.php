@@ -53,7 +53,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ========== ADMIN ROUTES ==========
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+Route::prefix('admin')->middleware('auth:sanctum')->group(callback: function () {
     // Listings
     Route::get('/listings', [AdminListingController::class, 'index']);
     Route::get('/listings/{id}', [AdminListingController::class, 'show']);
@@ -79,7 +79,7 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 
     Route::get('/errors', [SystemErrorController::class, 'index']);
     Route::get('/errors/{systemError}', [SystemErrorController::class, 'show']);
-
+    Route::post('/errors', [SystemErrorController::class, 'store']);
 });
 
 // ========== PUBLIC ROUTES ==========
