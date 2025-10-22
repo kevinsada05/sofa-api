@@ -13,9 +13,8 @@ class DeviceTokenController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'token' => 'required|string|max:1024',
-            'platform' => 'required|in:ios,android',
-            'installation_id' => 'nullable|string|max:100',
+            'token' => 'required|string',
+            'installation_id' => 'nullable|string',
         ]);
 
         $installationId = $validated['installation_id'] ?? (string) Str::uuid();
