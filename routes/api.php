@@ -29,8 +29,6 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [DashboardController::class, 'me']);
         Route::post('/logout', [LoginController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        // routes/api.php
-        Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'index']);
@@ -95,3 +93,4 @@ Route::delete('/favorites/{listing}', [FavoriteController::class, 'guestDestroy'
 
 Route::post('/contacts', [ContactController::class, 'store']);
 Route::post('/errors', [SystemErrorController::class, 'store']);
+Route::post('/device-tokens', [DeviceTokenController::class, 'store']);

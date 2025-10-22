@@ -5,22 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class DeviceTokenController extends Controller
 {
     public function store(Request $request)
     {
-        \Log::info($request->all());
+        \Log::info('Device token payload', $request->all());
+
         $validated = $request->validate([
-            'token' => 'required|string',
+            'token'           => 'required|string',
             'installation_id' => 'nullable|string',
         ]);
 
         $installationId = $validated['installation_id'] ?? (string) Str::uuid();
 
-        $user = $request->user();
+        $user = auth('sanctum')->user();
 
         $record = DeviceToken::updateOrCreate(
             ['installation_id' => $installationId],
@@ -32,8 +32,9 @@ class DeviceTokenController extends Controller
         );
 
         return response()->json([
-            'message' => 'Token stored',
+            'message'         => 'Token stored',
             'installation_id' => $record->installation_id,
+            'user_attached'   => (bool) $user,
         ]);
     }
 }
