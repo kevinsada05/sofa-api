@@ -10,11 +10,11 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\AuthListingController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SystemErrorController;
-use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserTypeController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +29,8 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [DashboardController::class, 'me']);
         Route::post('/logout', [LoginController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        // routes/api.php
+        Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'index']);
