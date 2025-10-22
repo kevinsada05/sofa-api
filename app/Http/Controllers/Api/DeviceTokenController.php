@@ -16,10 +16,10 @@ class DeviceTokenController extends Controller
         $validated = $request->validate([
             'token'           => 'required|string',
             'installation_id' => 'nullable|string',
+            'platform'        => 'nullable|string|in:ios,android',
         ]);
 
         $installationId = $validated['installation_id'] ?? (string) Str::uuid();
-
         $user = auth('sanctum')->user();
 
         $record = DeviceToken::updateOrCreate(
@@ -27,7 +27,7 @@ class DeviceTokenController extends Controller
             [
                 'user_id'  => $user?->id,
                 'token'    => $validated['token'],
-                'platform' => $validated['platform'],
+                'platform' => $validated['platform'] ?? 'unknown',
             ]
         );
 
