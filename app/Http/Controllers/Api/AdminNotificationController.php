@@ -28,8 +28,17 @@ class AdminNotificationController extends Controller
             'body'  => 'required|string|max:1000',
         ]);
 
+        // Get base64 credentials from config
+        $encoded = config('firebase.projects.app.credentials');
+
+        // Decode JSON and write to a temporary in-memory file
+        $tmp = tmpfile();
+        fwrite($tmp, base64_decode($encoded));
+        $path = stream_get_meta_data($tmp)['uri'];
+
+        // Initialize Firebase Messaging
         $messaging = (new Factory)
-            ->withServiceAccount(config('firebase.projects.app.credentials'))
+            ->withServiceAccount($path)
             ->createMessaging();
 
         $tokens = DeviceToken::whereNotNull('token')->pluck('token')->toArray();
@@ -56,7 +65,7 @@ class AdminNotificationController extends Controller
         }
 
         return response()->json([
-            'message' => "Notifications sent",
+            'message' => 'Notifications sent',
             'success' => $successCount,
             'failed'  => $failureCount,
         ]);

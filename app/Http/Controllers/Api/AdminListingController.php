@@ -181,7 +181,13 @@ class AdminListingController extends Controller
 
     protected function sendApprovalNotification(Listing $listing): void
     {
-        $factory = (new Factory)->withServiceAccount(config('firebase.projects.app.credentials'));
+        $encoded = config('firebase.projects.app.credentials');
+        $tmp = tmpfile();
+        fwrite($tmp, base64_decode($encoded));
+        $path = stream_get_meta_data($tmp)['uri'];
+
+        // Initialize Firebase Messaging
+        $factory = (new Factory)->withServiceAccount($path);
         $messaging = $factory->createMessaging();
 
         $token = DeviceToken::where('user_id', $listing->user_id)->value('token');
@@ -193,16 +199,15 @@ class AdminListingController extends Controller
             'token' => $token,
             'notification' => [
                 'title' => 'Njoftimi u pranua me sukses 🎉',
-                'body' => "{$listing->title} është tashmë aktiv",
+                'body'  => "{$listing->title} është tashmë aktiv",
             ],
             'data' => [
-                'deeplink' => "sofa://properties/{$listing->id}"
-            ]
+                'deeplink' => "sofa://properties/{$listing->id}",
+            ],
         ]);
 
         $messaging->send($message);
     }
-
     public function update(Request $request, $id)
     {
         $listing = Listing::findOrFail($id);
