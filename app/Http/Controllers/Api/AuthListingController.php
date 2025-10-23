@@ -137,12 +137,6 @@ class AuthListingController extends Controller
     /** Create listing */
     public function store(Request $request, $categoryCode)
     {
-        Log::info('STORE START', [
-            'categoryCode' => $categoryCode,
-            'auth_user_id' => optional($request->user())->id,
-            'headers_auth' => $request->header('Authorization'),
-        ]);
-
         $category = Category::where('code', $categoryCode)->firstOrFail();
 
         $categoryRequestClass = match ($category->code) {
@@ -177,13 +171,6 @@ class AuthListingController extends Controller
                 ->where('is_primary', true)
                 ->exists();
 
-            Log::info('VALIDATOR AFTER', [
-                'user_id' => $userId,
-                'hasPrimary' => $hasPrimary,
-                'primary_count' => TemporaryImage::where('user_id', $userId)->where('is_primary', true)->count(),
-                'gallery_count' => TemporaryImage::where('user_id', $userId)->where('is_primary', false)->count(),
-            ]);
-
             if (! $hasPrimary) {
                 $v->errors()->add('primary_image', 'Ju lutem zgjidhni një foto kryesore.');
             }
@@ -195,12 +182,6 @@ class AuthListingController extends Controller
                 'primary' => ['count' => TemporaryImage::where('user_id', $userId)->where('is_primary', true)->count()],
                 'gallery' => ['count' => TemporaryImage::where('user_id', $userId)->where('is_primary', false)->count()],
             ];
-
-            Log::warning('VALIDATION FAILED', [
-                'user_id' => $userId,
-                'errors' => $validator->errors()->toArray(),
-                'upload_status' => $uploadStatus,
-            ]);
 
             return response()->json([
                 'errors' => $validator->errors(),
@@ -218,12 +199,6 @@ class AuthListingController extends Controller
             ->where('is_primary', true)
             ->first();
 
-        Log::info('TRANSACTION START', [
-            'user_id' => $userId,
-            'primary_found' => (bool) $primary,
-            'primary_key' => $primary?->b2_key,
-        ]);
-
         $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
             $userId = optional($request->user())->id;
             $listing = Listing::create(array_merge($baseData, [
@@ -233,8 +208,6 @@ class AuthListingController extends Controller
                 'date_published' => now(),
                 'primary_image'  => $primary->b2_key ?? null,
             ]));
-
-            Log::info('LISTING CREATED', ['listing_id' => $listing->id]);
 
             TemporaryImage::where('user_id', $userId)
                 ->where('is_primary', false)
@@ -249,10 +222,6 @@ class AuthListingController extends Controller
             return $listing;
         });
 
-        Log::info('STORE SUCCESS', [
-            'listing_id' => $listing->id,
-            'user_id' => optional($request->user())->id,
-        ]);
 
         return response()->json([
             'message' => 'Listing created successfully.',
@@ -295,6 +264,13 @@ class AuthListingController extends Controller
     /** Upload temp image */
     public function upload(Request $request)
     {
+        logger()->info('UPLOAD ATTEMPT', [
+            'user_id' => auth()->id(),
+            'is_primary' => $request->boolean('is_primary'),
+            'image_size' => $request->file('image')?->getSize(),
+            'image_name' => $request->file('image')?->getClientOriginalName(),
+        ]);
+
         $request->validate([
             'image'=>'required|file|max:10240',
             'is_primary'=>'nullable|boolean'
