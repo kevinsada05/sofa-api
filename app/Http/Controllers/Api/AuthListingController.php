@@ -164,7 +164,6 @@ class AuthListingController extends Controller
 
         $validator = ValidatorFacade::make($request->all(), $rules, $messages, $attributes);
 
-        // Add required validation for primary image (checks TemporaryImage table)
         $validator->after(function ($v) use ($request) {
             $hasPrimary = TemporaryImage::where('user_id', $request->user()->id)
                 ->where('is_primary', true)
@@ -176,7 +175,15 @@ class AuthListingController extends Controller
         });
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            $uploadStatus = [
+                'primary' => ['count' => TemporaryImage::where('user_id', $request->user()->id)->where('is_primary', true)->count()],
+                'gallery' => ['count' => TemporaryImage::where('user_id', $request->user()->id)->where('is_primary', false)->count()],
+            ];
+
+            return response()->json([
+                'errors' => $validator->errors(),
+                'upload_status' => $uploadStatus
+            ], 422);
         }
 
         // Retrieve validated data and primary image after validation passes
