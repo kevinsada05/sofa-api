@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Validation\ValidationException;
@@ -251,6 +252,15 @@ class AuthListingController extends Controller
     /** Upload temp image */
     public function upload(Request $request)
     {
+        Log::info('UPLOAD ATTEMPT', [
+            'user_id' => $request->user()->id ?? null,
+            'is_primary' => $request->boolean('is_primary', false),
+            'has_file' => $request->hasFile('image'),
+            'image_name' => $request->file('image')?->getClientOriginalName(),
+            'image_size' => $request->file('image')?->getSize(),
+            'mime' => $request->file('image')?->getMimeType(),
+        ]);
+
         $request->validate([
             'image'=>'required|file|max:10240',
             'is_primary'=>'nullable|boolean'
