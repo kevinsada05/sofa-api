@@ -176,7 +176,9 @@ class AuthListingController extends Controller
         });
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Retrieve validated data and primary image after validation passes
