@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator as ValidatorContract;
 
 use App\Http\Requests\Listings\{
@@ -166,8 +167,13 @@ class AuthListingController extends Controller
 
         $primary = $this->validatePrimaryImage($validator, $request->user()->id);
 
+
         if ($validator->fails()) {
-            return response()->json(['errors'=>$validator->errors()],422);
+            if ($request->expectsJson()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            throw new ValidationException($validator);
         }
 
         $validated   = $validator->validated();
