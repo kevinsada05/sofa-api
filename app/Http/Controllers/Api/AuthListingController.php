@@ -167,15 +167,6 @@ class AuthListingController extends Controller
 
         $primary = $this->validatePrimaryImage($validator, $request->user()->id);
 
-
-        if ($validator->fails()) {
-            if ($request->expectsJson()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-            }
-
-            throw new ValidationException($validator);
-        }
-
         $validated   = $validator->validated();
         $baseData    = collect($validated)->except('details')->toArray();
         $detailsData = $validated['details'] ?? [];
