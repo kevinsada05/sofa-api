@@ -136,7 +136,7 @@ class AuthListingController extends Controller
     /** Create listing */
     public function store(Request $request, $categoryCode)
     {
-        $category = Category::where('code',$categoryCode)->firstOrFail();
+        $category = Category::where('code', $categoryCode)->firstOrFail();
 
         // Pick category request class
         $categoryRequestClass = match ($category->code) {
@@ -164,39 +164,56 @@ class AuthListingController extends Controller
 
         $validator = ValidatorFacade::make($request->all(), $rules, $messages, $attributes);
 
-        $primary = $this->validatePrimaryImage($validator, $request->user()->id);
+        // Add required validation for primary image (checks TemporaryImage table)
+        $validator->after(function ($v) use ($request) {
+            $hasPrimary = TemporaryImage::where('user_id', $request->user()->id)
+                ->where('is_primary', true)
+                ->exists();
+
+            if (! $hasPrimary) {
+                $v->errors()->add('primary_image', 'Ju lutem zgjidhni një foto kryesore.');
+            }
+        });
 
         if ($validator->fails()) {
-            return response()->json(['errors'=>$validator->errors()],422);
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Retrieve validated data and primary image after validation passes
         $validated   = $validator->validated();
         $baseData    = collect($validated)->except('details')->toArray();
         $detailsData = $validated['details'] ?? [];
 
-        $listing = DB::transaction(function() use($primary,$baseData,$category,$detailsData,$request) {
-            $listing = Listing::create(array_merge($baseData,[
-                'user_id'=>$request->user()->id,
-                'category_id'=>$category->id,
-                'status_id'=>3,
-                'date_published'=>now(),
-                'primary_image'=>$primary->b2_key,
+        $primary = TemporaryImage::where('user_id', $request->user()->id)
+            ->where('is_primary', true)
+            ->first();
+
+        $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
+            $listing = Listing::create(array_merge($baseData, [
+                'user_id'        => $request->user()->id,
+                'category_id'    => $category->id,
+                'status_id'      => 3,
+                'date_published' => now(),
+                'primary_image'  => $primary->b2_key,
             ]));
 
-            TemporaryImage::where('user_id',$request->user()->id)
-                ->where('is_primary',false)
+            TemporaryImage::where('user_id', $request->user()->id)
+                ->where('is_primary', false)
                 ->limit(9)
                 ->get()
-                ->each(fn($tmp)=>$listing->images()->create(['image_path'=>$tmp->b2_key]));
+                ->each(fn($tmp) => $listing->images()->create(['image_path' => $tmp->b2_key]));
 
-            TemporaryImage::where('user_id',$request->user()->id)->delete();
+            TemporaryImage::where('user_id', $request->user()->id)->delete();
 
-            $this->handleCategoryInsertion($category->code,$listing,$detailsData);
+            $this->handleCategoryInsertion($category->code, $listing, $detailsData);
 
             return $listing;
         });
 
-        return response()->json(['message'=>'Listing created successfully.','listing'=>$listing],201);
+        return response()->json([
+            'message' => 'Listing created successfully.',
+            'listing' => $listing,
+        ], 201);
     }
 
     /** Update */
@@ -258,18 +275,6 @@ class AuthListingController extends Controller
             'primary'=>['count'=>TemporaryImage::where('user_id',$uid)->where('is_primary',true)->count()],
             'gallery'=>['count'=>TemporaryImage::where('user_id',$uid)->where('is_primary',false)->count()],
         ]);
-    }
-
-    /** Helpers */
-    protected function validatePrimaryImage(ValidatorContract $validator,int $userId):?TemporaryImage
-    {
-        $primary = TemporaryImage::where('user_id',$userId)->where('is_primary',true)->first();
-        $validator->after(function($v) use($primary) {
-            if(!$primary) {
-                $v->errors()->add('primary_image','Ju lutem zgjidhni një foto kryesore.');
-            }
-        });
-        return $primary;
     }
 
     protected function handleCategoryInsertion(string $code,Listing $listing,array $data):void
