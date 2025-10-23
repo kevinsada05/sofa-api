@@ -137,7 +137,7 @@ class AuthListingController extends Controller
     /** Create listing */
     public function store(Request $request, $categoryCode)
     {
-        $category = Category::where('code',$categoryCode)->firstOrFail();
+        $category = Category::where('code', $categoryCode)->firstOrFail();
 
         // Pick category request class
         $categoryRequestClass = match ($category->code) {
@@ -165,35 +165,55 @@ class AuthListingController extends Controller
 
         $validator = ValidatorFacade::make($request->all(), $rules, $messages, $attributes);
 
+        // Validate primary image presence
         $primary = $this->validatePrimaryImage($validator, $request->user()->id);
+
+        // Handle failed validation
+        if ($validator->fails()) {
+            if (! $request->expectsJson()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $validated   = $validator->validated();
         $baseData    = collect($validated)->except('details')->toArray();
         $detailsData = $validated['details'] ?? [];
 
-        $listing = DB::transaction(function() use($primary,$baseData,$category,$detailsData,$request) {
-            $listing = Listing::create(array_merge($baseData,[
-                'user_id'=>$request->user()->id,
-                'category_id'=>$category->id,
-                'status_id'=>3,
-                'date_published'=>now(),
-                'primary_image'=>$primary->b2_key,
+        $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
+            $listing = Listing::create(array_merge($baseData, [
+                'user_id'        => $request->user()->id,
+                'category_id'    => $category->id,
+                'status_id'      => 3,
+                'date_published' => now(),
+                'primary_image'  => $primary->b2_key,
             ]));
 
-            TemporaryImage::where('user_id',$request->user()->id)
-                ->where('is_primary',false)
+            TemporaryImage::where('user_id', $request->user()->id)
+                ->where('is_primary', false)
                 ->limit(9)
                 ->get()
-                ->each(fn($tmp)=>$listing->images()->create(['image_path'=>$tmp->b2_key]));
+                ->each(fn ($tmp) => $listing->images()->create(['image_path' => $tmp->b2_key]));
 
-            TemporaryImage::where('user_id',$request->user()->id)->delete();
+            TemporaryImage::where('user_id', $request->user()->id)->delete();
 
-            $this->handleCategoryInsertion($category->code,$listing,$detailsData);
+            $this->handleCategoryInsertion($category->code, $listing, $detailsData);
 
             return $listing;
         });
 
-        return response()->json(['message'=>'Listing created successfully.','listing'=>$listing],201);
+        // Success responses
+        if (! $request->expectsJson()) {
+            return redirect()
+                ->route('auth.listings.index')
+                ->with('success', 'Njoftimi u krijua me sukses dhe do të publikohet pasi të rishikohet nga stafi brenda 24 orëve.');
+        }
+
+        return response()->json([
+            'message' => 'Listing created successfully.',
+            'listing' => $listing,
+        ], 201);
     }
 
     /** Update */
