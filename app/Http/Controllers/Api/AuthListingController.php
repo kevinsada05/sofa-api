@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Validation\Validator as ValidatorContract;
@@ -136,9 +137,14 @@ class AuthListingController extends Controller
     /** Create listing */
     public function store(Request $request, $categoryCode)
     {
+        Log::info('STORE START', [
+            'categoryCode' => $categoryCode,
+            'auth_user_id' => optional($request->user())->id,
+            'headers_auth' => $request->header('Authorization'),
+        ]);
+
         $category = Category::where('code', $categoryCode)->firstOrFail();
 
-        // Pick category request class
         $categoryRequestClass = match ($category->code) {
             'apartment' => ApartmentRequest::class,
             'villa' => VillaRequest::class,
@@ -164,10 +170,19 @@ class AuthListingController extends Controller
 
         $validator = ValidatorFacade::make($request->all(), $rules, $messages, $attributes);
 
+        // ---- post-validation callback ----
         $validator->after(function ($v) use ($request) {
-            $hasPrimary = TemporaryImage::where('user_id', $request->user()->id)
+            $userId = optional($request->user())->id;
+            $hasPrimary = TemporaryImage::where('user_id', $userId)
                 ->where('is_primary', true)
                 ->exists();
+
+            Log::info('VALIDATOR AFTER', [
+                'user_id' => $userId,
+                'hasPrimary' => $hasPrimary,
+                'primary_count' => TemporaryImage::where('user_id', $userId)->where('is_primary', true)->count(),
+                'gallery_count' => TemporaryImage::where('user_id', $userId)->where('is_primary', false)->count(),
+            ]);
 
             if (! $hasPrimary) {
                 $v->errors()->add('primary_image', 'Ju lutem zgjidhni një foto kryesore.');
@@ -175,10 +190,17 @@ class AuthListingController extends Controller
         });
 
         if ($validator->fails()) {
+            $userId = optional($request->user())->id;
             $uploadStatus = [
-                'primary' => ['count' => TemporaryImage::where('user_id', $request->user()->id)->where('is_primary', true)->count()],
-                'gallery' => ['count' => TemporaryImage::where('user_id', $request->user()->id)->where('is_primary', false)->count()],
+                'primary' => ['count' => TemporaryImage::where('user_id', $userId)->where('is_primary', true)->count()],
+                'gallery' => ['count' => TemporaryImage::where('user_id', $userId)->where('is_primary', false)->count()],
             ];
+
+            Log::warning('VALIDATION FAILED', [
+                'user_id' => $userId,
+                'errors' => $validator->errors()->toArray(),
+                'upload_status' => $uploadStatus,
+            ]);
 
             return response()->json([
                 'errors' => $validator->errors(),
@@ -186,36 +208,51 @@ class AuthListingController extends Controller
             ], 422);
         }
 
-        // Retrieve validated data and primary image after validation passes
+        // ---- passed validation ----
         $validated   = $validator->validated();
         $baseData    = collect($validated)->except('details')->toArray();
         $detailsData = $validated['details'] ?? [];
 
-        $primary = TemporaryImage::where('user_id', $request->user()->id)
+        $userId = optional($request->user())->id;
+        $primary = TemporaryImage::where('user_id', $userId)
             ->where('is_primary', true)
             ->first();
 
+        Log::info('TRANSACTION START', [
+            'user_id' => $userId,
+            'primary_found' => (bool) $primary,
+            'primary_key' => $primary?->b2_key,
+        ]);
+
         $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
+            $userId = optional($request->user())->id;
             $listing = Listing::create(array_merge($baseData, [
-                'user_id'        => $request->user()->id,
+                'user_id'        => $userId,
                 'category_id'    => $category->id,
                 'status_id'      => 3,
                 'date_published' => now(),
-                'primary_image'  => $primary->b2_key,
+                'primary_image'  => $primary->b2_key ?? null,
             ]));
 
-            TemporaryImage::where('user_id', $request->user()->id)
+            Log::info('LISTING CREATED', ['listing_id' => $listing->id]);
+
+            TemporaryImage::where('user_id', $userId)
                 ->where('is_primary', false)
                 ->limit(9)
                 ->get()
                 ->each(fn($tmp) => $listing->images()->create(['image_path' => $tmp->b2_key]));
 
-            TemporaryImage::where('user_id', $request->user()->id)->delete();
+            TemporaryImage::where('user_id', $userId)->delete();
 
             $this->handleCategoryInsertion($category->code, $listing, $detailsData);
 
             return $listing;
         });
+
+        Log::info('STORE SUCCESS', [
+            'listing_id' => $listing->id,
+            'user_id' => optional($request->user())->id,
+        ]);
 
         return response()->json([
             'message' => 'Listing created successfully.',
