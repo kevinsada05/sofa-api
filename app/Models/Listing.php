@@ -243,12 +243,6 @@ class Listing extends Model
         $path = $this->primary_image;
         if (!$path) return null;
 
-        if (file_exists(public_path($path))) {
-            return asset($path);
-        }
-
-        // Otherwise assume it's in B2
         return Storage::disk('b2')->url($path);
     }
-
 }

@@ -22,14 +22,9 @@ class ListingImage extends Model
     public function getUrlAttribute(): ?string
     {
         $path = $this->image_path;
-        if (!$path) {
-            return null;
-        }
-
-        if (file_exists(public_path($path)) || file_exists(public_path('storage/'.$path))) {
-            return asset($path);
-        }
+        if (!$path) return null;
 
         return Storage::disk('b2')->url($path);
     }
+
 }
