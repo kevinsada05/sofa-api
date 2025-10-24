@@ -116,7 +116,7 @@ class AuthListingController extends Controller
     /** List user listings */
     public function index(Request $request)
     {
-        $status = $request->query('status') ?? 1;
+        $status = $request->query('status', 1);
 
         Log::info('Auth User ID:', ['id' => $request->user()->id]);
         Log::info('Requested status:', ['status' => $status]);
