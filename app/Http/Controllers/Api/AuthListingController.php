@@ -136,7 +136,7 @@ class AuthListingController extends Controller
     public function show(Request $request, $id)
     {
         $listing = Listing::with([
-            'images','category','city','transactionType','rentPeriod','ownership','status'
+            'images','category','city','transactionType','rentPeriod','ownership','status', 'user'
         ])->where('user_id',$request->user()->id)->findOrFail($id);
 
         return response()->json(['listing'=>$listing]);
