@@ -116,13 +116,20 @@ class AuthListingController extends Controller
     /** List user listings */
     public function index(Request $request)
     {
+        Log::info('Auth User ID:', ['id' => $request->user()->id]);
+        Log::info('Requested status:', ['status' => $request->status]);
+
         $listings = $request->user()->listings()
-            ->with(['category','city','transactionType'])
-            ->when($request->filled('status'), fn($q) => $q->where('status_id',$request->status))
+            ->with(['category', 'city', 'transactionType'])
+            ->when($request->filled('status'), fn($q) =>
+            $q->where('status_id', (int) $request->status)
+            )
             ->latest()
             ->get();
 
-        return response()->json(['listings'=>$listings]);
+        Log::info('Listings count:', ['count' => $listings->count()]);
+
+        return response()->json(['listings' => $listings]);
     }
 
     /** Show listing */
@@ -252,15 +259,6 @@ class AuthListingController extends Controller
     /** Upload temp image */
     public function upload(Request $request)
     {
-        Log::info('UPLOAD ATTEMPT', [
-            'user_id' => $request->user()->id ?? null,
-            'is_primary' => $request->boolean('is_primary', false),
-            'has_file' => $request->hasFile('image'),
-            'image_name' => $request->file('image')?->getClientOriginalName(),
-            'image_size' => $request->file('image')?->getSize(),
-            'mime' => $request->file('image')?->getMimeType(),
-        ]);
-
         $request->validate([
             'image'=>'required|file|max:10240',
             'is_primary'=>'nullable|boolean'

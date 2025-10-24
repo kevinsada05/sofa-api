@@ -47,9 +47,9 @@ class ListingController extends Controller
             'data' => $listings->items(),
             'next_page' => $listings->nextPageUrl(),
             'filters' => [
-                'cities' => City::orderBy('name')->get(),
-                'categories' => Category::orderBy('name')->get(),
-                'transaction_types' => TransactionType::orderBy('name')->get(),
+                'cities' => $cities,
+                'categories' => $categories,
+                'transaction_types' => $transactionTypes,
             ],
         ]);
     }
