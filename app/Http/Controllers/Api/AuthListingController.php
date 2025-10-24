@@ -116,14 +116,14 @@ class AuthListingController extends Controller
     /** List user listings */
     public function index(Request $request)
     {
+        $status = $request->query('status') ?? 1;
+
         Log::info('Auth User ID:', ['id' => $request->user()->id]);
-        Log::info('Requested status:', ['status' => $request->status]);
+        Log::info('Requested status:', ['status' => $status]);
 
         $listings = $request->user()->listings()
             ->with(['category', 'city', 'transactionType'])
-            ->when($request->filled('status'), fn($q) =>
-            $q->where('status_id', (int) $request->status)
-            )
+            ->where('status_id', $status)
             ->latest()
             ->get();
 
