@@ -135,12 +135,20 @@ class AuthListingController extends Controller
     /** Show listing */
     public function show(Request $request, $id)
     {
-        $listing = Listing::with([
-            'images','category','city','transactionType','rentPeriod','ownership','status', 'user'
-        ])->where('user_id',$request->user()->id)->findOrFail($id);
+        $user = $request->user();
 
-        return response()->json(['listing'=>$listing]);
+        $listing = Listing::with([
+            'images', 'category', 'city', 'transactionType', 'rentPeriod',
+            'ownership', 'status', 'user'
+        ])->where('user_id', $user->id)->findOrFail($id);
+
+        $listing->favorites_count = $listing->favorites()->count();
+        $listing->is_favorited = $listing->favorites()->where('user_id', $user->id)->exists();
+        $listing->views = ['view_count' => $listing->views?->view_count ?? 0];
+
+        return response()->json(['listing' => $listing]);
     }
+
 
     /** Create listing */
     public function store(Request $request, $categoryCode)
