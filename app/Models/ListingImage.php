@@ -22,9 +22,8 @@ class ListingImage extends Model
     public function getUrlAttribute(): ?string
     {
         $path = $this->image_path;
-        if (!$path) return null;
+        if (! $path) return null;
 
-        return Storage::disk('b2')->url($path);
+        return 'https://cdn.sofa-app.site/file/sofa-al/' . ltrim($path, '/');
     }
-
 }
