@@ -11,8 +11,6 @@ class DeviceTokenController extends Controller
 {
     public function store(Request $request)
     {
-        \Log::info('Device token payload', $request->all());
-
         $validated = $request->validate([
             'token'           => 'required|string',
             'installation_id' => 'nullable|string',

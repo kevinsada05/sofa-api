@@ -118,9 +118,6 @@ class AuthListingController extends Controller
     {
         $status = $request->query('status', 1);
 
-        Log::info('Auth User ID:', ['id' => $request->user()->id]);
-        Log::info('Requested status:', ['status' => $status]);
-
         $listings = $request->user()->listings()
             ->with(['category', 'city', 'transactionType'])
             ->where('status_id', $status)
@@ -216,13 +213,28 @@ class AuthListingController extends Controller
                 'primary_image'  => $primary->b2_key,
             ]));
 
-            TemporaryImage::where('user_id', $request->user()->id)
-                ->where('is_primary', false)
-                ->limit(9)
-                ->get()
-                ->each(fn ($tmp) => $listing->images()->create(['image_path' => $tmp->b2_key]));
+            $tempImages = TemporaryImage::where('user_id', $request->user()->id)->get();
 
-            TemporaryImage::where('user_id', $request->user()->id)->delete();
+            foreach ($tempImages as $temp) {
+                $newPath = "listings/{$listing->id}/" . basename($temp->b2_key);
+
+                // Move file from temp/ → listings/{id}/
+                Storage::disk('b2')->move($temp->b2_key, $newPath);
+
+                // Create final ListingImage record
+                $listing->images()->create([
+                    'image_path' => $newPath,
+                    'is_primary' => $temp->is_primary,
+                ]);
+
+                // Update primary image path on listing
+                if ($temp->is_primary) {
+                    $listing->update(['primary_image' => $newPath]);
+                }
+
+                // Clean up temp record
+                $temp->delete();
+            }
 
             $this->handleCategoryInsertion($category->code, $listing, $detailsData);
 
