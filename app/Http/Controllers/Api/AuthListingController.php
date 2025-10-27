@@ -221,15 +221,14 @@ class AuthListingController extends Controller
                 // Move file from temp/ → listings/{id}/
                 Storage::disk('b2')->move($temp->b2_key, $newPath);
 
-                // Create final ListingImage record
-                $listing->images()->create([
-                    'image_path' => $newPath,
-                    'is_primary' => $temp->is_primary,
-                ]);
-
-                // Update primary image path on listing
                 if ($temp->is_primary) {
+                    // Set only on listing, not in listing_images
                     $listing->update(['primary_image' => $newPath]);
+                } else {
+                    // Store only non-primary images
+                    $listing->images()->create([
+                        'image_path' => $newPath,
+                    ]);
                 }
 
                 // Clean up temp record
