@@ -37,7 +37,7 @@ class ListingController extends Controller
             )
             ->where('status_id', 1)
             ->orderByDesc('date_published')
-            ->simplePaginate(20);
+            ->paginate(20);
 
         $cities = City::orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
