@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\Route;
 // ========== AUTH USER ROUTES ==========
 Route::prefix('auth')->group(function () {
     // Public
-    Route::post('/register', [RegisterController::class, 'register']);
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/register', [RegisterController::class, 'register'])->name('register');
+    Route::post('/login', [LoginController::class, 'login'])->name('login');
 
     // Protected
     Route::middleware('auth.api:sanctum')->group(function () {
