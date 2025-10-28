@@ -16,13 +16,7 @@ class SystemErrorController extends Controller
         $errors = SystemError::latest()->get();
 
         return response()->json([
-            'errors' => $errors->items(),
-            'pagination' => [
-                'current_page' => $errors->currentPage(),
-                'last_page'    => $errors->lastPage(),
-                'per_page'     => $errors->perPage(),
-                'total'        => $errors->total(),
-            ]
+            'errors' => $errors,
         ]);
     }
 
