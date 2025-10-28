@@ -10,7 +10,7 @@ class AdminContactController extends Controller
 {
     public function index(Request $request)
     {
-        $contacts = Contact::latest()->paginate(15);
+        $contacts = Contact::latest()->get();
 
         return response()->json([
             'contacts' => $contacts

@@ -13,7 +13,7 @@ class SystemErrorController extends Controller
 {
     public function index(): JsonResponse
     {
-        $errors = SystemError::latest()->paginate(20);
+        $errors = SystemError::latest()->get();
 
         return response()->json([
             'errors' => $errors->items(),

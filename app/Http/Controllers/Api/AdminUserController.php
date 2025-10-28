@@ -26,7 +26,7 @@ class AdminUserController extends Controller
             $query->where('user_type_id', $request->user_type_id);
         }
 
-        $users = $query->latest()->paginate(15);
+        $users = $query->latest()->get();
 
         $stats = [
             'total'           => User::count(),

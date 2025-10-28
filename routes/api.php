@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SystemErrorController;
 use App\Http\Controllers\Api\UserTypeController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // ========== AUTH USER ROUTES ==========
@@ -28,6 +29,21 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth.api:sanctum')->group(function () {
         Route::get('/me', [DashboardController::class, 'me']);
         Route::post('/logout', [LoginController::class, 'logout']);
+
+        Route::get('/check', function (Request $request) {
+            return response()->json(['valid' => true]);
+        });
+
+        Route::post('/refresh', function (Request $request) {
+            $request->user()->tokens()->delete();
+            $token = $request->user()->createToken('mobile')->plainTextToken;
+
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ]);
+        });
+
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Profile
@@ -94,3 +110,4 @@ Route::delete('/favorites/{listing}', [FavoriteController::class, 'guestDestroy'
 Route::post('/contacts', [ContactController::class, 'store']);
 Route::post('/errors', [SystemErrorController::class, 'store']);
 Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
+

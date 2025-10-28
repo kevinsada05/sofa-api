@@ -38,8 +38,8 @@ class AdminListingController extends Controller
         }
 
         return response()->json([
-            'listings' => $query->paginate(20),
-            'statuses' => Status::select('id', 'name')->get(),
+            'listings' => $query->take(100)->get(),
+        'statuses' => Status::select('id', 'name')->get(),
             'cities' => City::select('id', 'name')->get(),
             'ownerships' => Ownership::select('id', 'name')->get(),
             'transactionTypes' => TransactionType::select('id', 'name')->get(),
