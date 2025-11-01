@@ -193,6 +193,7 @@ class AuthListingController extends Controller
 
         // Handle failed validation
         if ($validator->fails()) {
+            Log::info($validator->errors());
             if (! $request->expectsJson()) {
                 return redirect()->back()->withErrors($validator)->withInput();
             }
