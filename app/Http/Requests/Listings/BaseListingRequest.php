@@ -20,10 +20,14 @@ class BaseListingRequest extends FormRequest
             'city_id'             => ['required', 'exists:cities,id'],
             'transaction_type_id' => ['required', 'exists:transaction_types,id'],
             'ownership_id'        => ['required', 'exists:ownerships,id'],
-            'rent_period_id'      => [
-                Rule::requiredIf(
-                    optional(TransactionType::find(request()->transaction_type_id))->code === 'rent'
-                ),
+            'rent_period_id' => [
+                Rule::requiredIf(function () {
+                    $transaction = TransactionType::find(request()->transaction_type_id);
+                    $categoryCode = request()->route('category');
+
+                    return optional($transaction)->code === 'rent'
+                        && $categoryCode !== 'shared_rent';
+                }),
                 'nullable',
                 'exists:rent_periods,id',
             ],
