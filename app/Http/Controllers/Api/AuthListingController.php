@@ -207,11 +207,11 @@ class AuthListingController extends Controller
 
         $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
 
-            // Move PRIMARY temp first to get correct final path
+            // 1. Move primary image to a temp listing path BEFORE creating listing
             $primaryNewPath = "listings/tmp_" . basename($primary->b2_key);
             Storage::disk('b2')->move($primary->b2_key, $primaryNewPath);
 
-            // Create listing using the REAL moved path
+            // 2. Create listing with the temp primary path
             $listing = Listing::create(array_merge($baseData, [
                 'user_id'        => $request->user()->id,
                 'category_id'    => $category->id,
@@ -220,40 +220,40 @@ class AuthListingController extends Controller
                 'primary_image'  => $primaryNewPath,
             ]));
 
+            // 3. Fetch all temporary images (including primary)
             $tempImages = TemporaryImage::where('user_id', $request->user()->id)->get();
 
             foreach ($tempImages as $temp) {
 
-                // Skip primary because we already moved it manually
-                if ($temp->id === $primary->id) {
-                    $temp->delete();
-                    continue;
-                }
-
+                // 4. Build final path for this image
                 $newPath = "listings/{$listing->id}/" . basename($temp->b2_key);
 
-                // Move file from temp/ → listings/{id}/
+                // 5. Move image to final listing folder
                 Storage::disk('b2')->move($temp->b2_key, $newPath);
 
+                // 6. Assign primary or save as gallery
                 if ($temp->is_primary) {
-                    // Set only on listing, not in listing_images
+                    // primary → listing.primary_image
                     $listing->update(['primary_image' => $newPath]);
                 } else {
-                    // Store only non-primary images
+                    // gallery → listing_images table
                     $listing->images()->create([
                         'image_path' => $newPath,
                     ]);
                 }
 
-                // Clean up temp record
+                // 7. Clean up temporary record
                 $temp->delete();
             }
 
-            // Finally move primary to its final directory
+            // 8. Move primary image (that was placed in listings/tmp_) to final folder
             $finalPrimaryPath = "listings/{$listing->id}/" . basename($primaryNewPath);
             Storage::disk('b2')->move($primaryNewPath, $finalPrimaryPath);
+
+            // 9. Update listing primary image with final correct path
             $listing->update(['primary_image' => $finalPrimaryPath]);
 
+            // 10. Save category-specific details
             $this->handleCategoryInsertion($category->code, $listing, $detailsData);
 
             return $listing;
