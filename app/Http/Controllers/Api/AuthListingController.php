@@ -205,16 +205,22 @@ class AuthListingController extends Controller
         $baseData    = collect($validated)->except('details')->toArray();
         $detailsData = $validated['details'] ?? [];
 
-        $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
+        $listing = DB::transaction(function () use ($baseData, $category, $detailsData, $request) {
             $listing = Listing::create(array_merge($baseData, [
                 'user_id'        => $request->user()->id,
                 'category_id'    => $category->id,
                 'status_id'      => 3,
                 'date_published' => now(),
-                'primary_image'  => $primary->b2_key,
+                'primary_image'  => null,
             ]));
 
             $tempImages = TemporaryImage::where('user_id', $request->user()->id)->get();
+
+            $primaryTemp = $tempImages->firstWhere('is_primary', true);
+
+            if (!$primaryTemp && $tempImages->isNotEmpty()) {
+                $primaryTemp = $tempImages->sortBy('id')->first();
+            }
 
             foreach ($tempImages as $temp) {
                 $newPath = "listings/{$listing->id}/" . basename($temp->b2_key);
@@ -222,11 +228,10 @@ class AuthListingController extends Controller
                 // Move file from temp/ → listings/{id}/
                 Storage::disk('b2')->move($temp->b2_key, $newPath);
 
-                if ($temp->is_primary) {
-                    // Set only on listing, not in listing_images
-                    $listing->update(['primary_image' => $newPath]);
+                if ($primaryTemp && $temp->id === $primaryTemp->id) {
+                    $listing->primary_image = $newPath;
+                    $listing->save();
                 } else {
-                    // Store only non-primary images
                     $listing->images()->create([
                         'image_path' => $newPath,
                     ]);
