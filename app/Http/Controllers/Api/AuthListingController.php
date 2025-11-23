@@ -205,33 +205,41 @@ class AuthListingController extends Controller
         $baseData    = collect($validated)->except('details')->toArray();
         $detailsData = $validated['details'] ?? [];
 
-        $listing = DB::transaction(function () use ($baseData, $category, $detailsData, $request) {
+        $listing = DB::transaction(function () use ($primary, $baseData, $category, $detailsData, $request) {
+
+            // Move PRIMARY temp first to get correct final path
+            $primaryNewPath = "listings/tmp_" . basename($primary->b2_key);
+            Storage::disk('b2')->move($primary->b2_key, $primaryNewPath);
+
+            // Create listing using the REAL moved path
             $listing = Listing::create(array_merge($baseData, [
                 'user_id'        => $request->user()->id,
                 'category_id'    => $category->id,
                 'status_id'      => 3,
                 'date_published' => now(),
-                'primary_image'  => null,
+                'primary_image'  => $primaryNewPath,
             ]));
 
             $tempImages = TemporaryImage::where('user_id', $request->user()->id)->get();
 
-            $primaryTemp = $tempImages->firstWhere('is_primary', true);
-
-            if (!$primaryTemp && $tempImages->isNotEmpty()) {
-                $primaryTemp = $tempImages->sortBy('id')->first();
-            }
-
             foreach ($tempImages as $temp) {
+
+                // Skip primary because we already moved it manually
+                if ($temp->id === $primary->id) {
+                    $temp->delete();
+                    continue;
+                }
+
                 $newPath = "listings/{$listing->id}/" . basename($temp->b2_key);
 
                 // Move file from temp/ → listings/{id}/
                 Storage::disk('b2')->move($temp->b2_key, $newPath);
 
-                if ($primaryTemp && $temp->id === $primaryTemp->id) {
-                    $listing->primary_image = $newPath;
-                    $listing->save();
+                if ($temp->is_primary) {
+                    // Set only on listing, not in listing_images
+                    $listing->update(['primary_image' => $newPath]);
                 } else {
+                    // Store only non-primary images
                     $listing->images()->create([
                         'image_path' => $newPath,
                     ]);
@@ -240,6 +248,11 @@ class AuthListingController extends Controller
                 // Clean up temp record
                 $temp->delete();
             }
+
+            // Finally move primary to its final directory
+            $finalPrimaryPath = "listings/{$listing->id}/" . basename($primaryNewPath);
+            Storage::disk('b2')->move($primaryNewPath, $finalPrimaryPath);
+            $listing->update(['primary_image' => $finalPrimaryPath]);
 
             $this->handleCategoryInsertion($category->code, $listing, $detailsData);
 
