@@ -143,7 +143,30 @@ class AuthListingController extends Controller
             'user',
             'views',
             'favorites',
-        ])->where('user_id', $request->user()->id)->findOrFail($id);
+        ])
+            ->where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        $category = $listing->category?->code;
+
+        $detailMap = [
+            'apartment' => 'apartmentDetail',
+            'villa' => 'villaDetail',
+            'shared_rent' => 'sharedRentDetail',
+            'penthouse' => 'penthouseDetail',
+            'garsoniere' => 'garsoniereDetail',
+            'garage' => 'garageDetail',
+            'shop' => 'shopDetail',
+            'office' => 'officeDetail',
+            'warehouse' => 'warehouseDetail',
+            'agricultural_land' => 'agriculturalLandDetail',
+            'plot' => 'plotDetail',
+            'business' => 'businessDetail',
+        ];
+
+        if ($category && isset($detailMap[$category])) {
+            $listing->load($detailMap[$category]);
+        }
 
         $listing->append([
             'details',
