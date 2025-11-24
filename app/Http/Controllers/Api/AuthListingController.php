@@ -132,6 +132,7 @@ class AuthListingController extends Controller
     /** Show listing */
     public function show(Request $request, $id)
     {
+        // Base listing + common relations
         $listing = Listing::with([
             'images',
             'category',
@@ -147,27 +148,92 @@ class AuthListingController extends Controller
             ->where('user_id', $request->user()->id)
             ->findOrFail($id);
 
-        $category = $listing->category?->code;
+        // Decide which detail + extra relations to load
+        $categoryCode = $listing->category?->code;
 
-        $detailMap = [
-            'apartment' => 'apartmentDetail',
-            'villa' => 'villaDetail',
-            'shared_rent' => 'sharedRentDetail',
-            'penthouse' => 'penthouseDetail',
-            'garsoniere' => 'garsoniereDetail',
-            'garage' => 'garageDetail',
-            'shop' => 'shopDetail',
-            'office' => 'officeDetail',
-            'warehouse' => 'warehouseDetail',
-            'agricultural_land' => 'agriculturalLandDetail',
-            'plot' => 'plotDetail',
-            'business' => 'businessDetail',
+        $map = [
+            'apartment' => [
+                'apartmentDetail',
+                'apartmentDetail.yearBuild',
+                'apartmentDetail.condition',
+                'apartmentDetail.furnishing',
+                'apartmentDetail.orientation',
+                'apartmentDetail.heating',
+                'apartmentDetail.apartmentType',
+            ],
+            'villa' => [
+                'villaDetail',
+                'villaDetail.yearBuild',
+                'villaDetail.condition',
+                'villaDetail.furnishing',
+                'villaDetail.orientation',
+                'villaDetail.heating',
+            ],
+            'shared_rent' => [
+                'sharedRentDetail',
+                'sharedRentDetail.yearBuild',
+                'sharedRentDetail.condition',
+                'sharedRentDetail.furnishing',
+                'sharedRentDetail.orientation',
+                'sharedRentDetail.heating',
+                'sharedRentDetail.apartmentType',
+            ],
+            'penthouse' => [
+                'penthouseDetail',
+                'penthouseDetail.yearBuild',
+                'penthouseDetail.condition',
+                'penthouseDetail.furnishing',
+                'penthouseDetail.orientation',
+                'penthouseDetail.heating',
+            ],
+            'garsoniere' => [
+                'garsoniereDetail',
+                'garsoniereDetail.yearBuild',
+                'garsoniereDetail.condition',
+                'garsoniereDetail.furnishing',
+                'garsoniereDetail.orientation',
+                'garsoniereDetail.heating',
+            ],
+            'garage' => ['garageDetail'],
+            'shop' => [
+                'shopDetail',
+                'shopDetail.yearBuild',
+                'shopDetail.condition',
+                'shopDetail.furnishing',
+                'shopDetail.orientation',
+                'shopDetail.heating',
+            ],
+            'office' => [
+                'officeDetail',
+                'officeDetail.yearBuild',
+                'officeDetail.condition',
+                'officeDetail.furnishing',
+                'officeDetail.orientation',
+                'officeDetail.heating',
+            ],
+            'warehouse' => [
+                'warehouseDetail',
+                'warehouseDetail.yearBuild',
+                'warehouseDetail.condition',
+            ],
+            'agricultural_land' => [
+                'agriculturalLandDetail',
+                'agriculturalLandDetail.landType',
+                'agriculturalLandDetail.soilQuality',
+                'agriculturalLandDetail.terrainType',
+            ],
+            'plot' => [
+                'plotDetail',
+                'plotDetail.terrainType',
+            ],
+            'business' => ['businessDetail'],
         ];
 
-        if ($category && isset($detailMap[$category])) {
-            $listing->load($detailMap[$category]);
+        if ($categoryCode && isset($map[$categoryCode])) {
+            $listing->load($map[$categoryCode]);
         }
 
+        // Accessors (including getDetailsAttribute) now see fully-loaded relations
         $listing->append([
             'details',
             'title',
